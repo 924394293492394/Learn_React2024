@@ -1,12 +1,23 @@
 import React, { useState } from "react";
 import "./App.css";
+import {
+  Button,
+  TextField,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+} from "@mui/material";
 
 const App = () => {
   const [employeeName, setEmployeeName] = useState("");
   const [employeePosition, setEmployeePosition] = useState("");
   const [employees, setEmployees] = useState([]);
   const [editEmployeeId, setEditEmployeeId] = useState(null);
-  const [view, setView] = useState('table'); 
+  const [view, setView] = useState('table');
 
   const handleAddEmployee = (e) => {
     e.preventDefault();
@@ -45,27 +56,29 @@ const App = () => {
   };
 
   const renderTableView = () => (
-    <table>
-      <thead>
-        <tr>
-          <th>Имя и Фамилия</th>
-          <th>Должность</th>
-          <th>Действия</th>
-        </tr>
-      </thead>
-      <tbody>
-        {employees.map((employee) => (
-          <tr key={employee.id}>
-            <td>{employee.name}</td>
-            <td>{employee.position}</td>
-            <td className="table-buttons">
-              <button onClick={() => handleEditEmployee(employee.id)}>Редактировать</button>
-              <button onClick={() => handleDeleteEmployee(employee.id)}>Удалить</button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Имя и Фамилия</TableCell>
+            <TableCell>Должность</TableCell>
+            <TableCell>Действия</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {employees.map((employee) => (
+            <TableRow key={employee.id}>
+              <TableCell>{employee.name}</TableCell>
+              <TableCell>{employee.position}</TableCell>
+              <TableCell>
+                <Button onClick={() => handleEditEmployee(employee.id)}>Редактировать</Button>
+                <Button onClick={() => handleDeleteEmployee(employee.id)}>Удалить</Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 
   const renderCardView = () => (
@@ -75,8 +88,8 @@ const App = () => {
           <h2>{employee.name}</h2>
           <p>Должность: {employee.position}</p>
           <div className="card-buttons">
-            <button onClick={() => handleEditEmployee(employee.id)}>Редактировать</button>
-            <button onClick={() => handleDeleteEmployee(employee.id)}>Удалить</button>
+            <Button onClick={() => handleEditEmployee(employee.id)}>Редактировать</Button>
+            <Button onClick={() => handleDeleteEmployee(employee.id)}>Удалить</Button>
           </div>
         </div>
       ))}
@@ -88,26 +101,26 @@ const App = () => {
       <h1>Управление работниками</h1>
 
       <form onSubmit={handleAddEmployee}>
-        <input
-          type="text"
-          placeholder="Имя и Фамилия"
+        <TextField
+          label="Имя и Фамилия"
+          variant="outlined"
           value={employeeName}
           onChange={(e) => setEmployeeName(e.target.value)}
           required
         />
-        <input
-          type="text"
-          placeholder="Должность"
+        <TextField
+          label="Должность"
+          variant="outlined"
           value={employeePosition}
           onChange={(e) => setEmployeePosition(e.target.value)}
           required
         />
-        <button type="submit">{editEmployeeId ? "Сохранить" : "Добавить работника"}</button>
+        <Button type="submit" variant="contained">{editEmployeeId ? "Сохранить" : "Добавить работника"}</Button>
       </form>
 
       <div className="view-buttons">
-        <button onClick={() => setView('table')}>Таблица</button>
-        <button onClick={() => setView('cards')}>Карточки</button>
+        <Button variant="outlined" onClick={() => setView('table')}>Таблица</Button>
+        <Button variant="outlined" onClick={() => setView('cards')}>Карточки</Button>
       </div>
 
       {view === 'table' ? renderTableView() : renderCardView()}

@@ -1,23 +1,19 @@
 import React, { useState } from "react";
+import { BrowserRouter as Router, Route, Routes, Link, useNavigate } from "react-router-dom";
 import "./App.css";
-import {
-  Button,
-  TextField,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-} from "@mui/material";
+import { Button, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
+
+const userData = [
+  { id: 1, email: "admin@example.com", password: "admin123", name: "Admin" },
+  { id: 2, email: "user@example.com", password: "user123", name: "User" }
+];
 
 const App = () => {
   const [employeeName, setEmployeeName] = useState("");
   const [employeePosition, setEmployeePosition] = useState("");
   const [employees, setEmployees] = useState([]);
   const [editEmployeeId, setEditEmployeeId] = useState(null);
-  const [view, setView] = useState('table');
+  const [currentUser, setCurrentUser] = useState(null);
 
   const handleAddEmployee = (e) => {
     e.preventDefault();
@@ -97,33 +93,106 @@ const App = () => {
   );
 
   return (
-    <div className="App">
-      <h1>Управление работниками</h1>
+    <Router>
+      <div className="App">
+        {!currentUser ? (
+          <Routes>
+            <Route path="/" element={<Login setCurrentUser={setCurrentUser} />} />
+          </Routes>
+        ) : (
+          <div>
+            { }
+            <h1>Управление работниками</h1>
 
-      <form onSubmit={handleAddEmployee}>
+            <form onSubmit={handleAddEmployee}>
+              <TextField
+                label="Имя и Фамилия"
+                variant="outlined"
+                value={employeeName}
+                onChange={(e) => setEmployeeName(e.target.value)}
+                required
+              />
+              <TextField
+                label="Должность"
+                variant="outlined"
+                value={employeePosition}
+                onChange={(e) => setEmployeePosition(e.target.value)}
+                required
+              />
+              <Button type="submit" variant="contained">
+                {editEmployeeId ? "Сохранить" : "Добавить работника"}
+              </Button>
+            </form>
+
+            <div className="view-buttons">
+              <Link to="/table">
+                <Button variant="outlined">Таблица</Button>
+              </Link>
+              <Link to="/cards">
+                <Button variant="outlined">Карточки</Button>
+              </Link>
+            </div>
+
+            <Routes>
+              <Route path="/table" element={renderTableView()} />
+              <Route path="/cards" element={renderCardView()} />
+            </Routes>
+          </div>
+        )}
+      </div>
+    </Router>
+  );
+};
+
+// Страница для входа
+const Login = ({ setCurrentUser }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginMessage, setLoginMessage] = useState("");
+  const navigate = useNavigate();
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const user = userData.find((u) => u.email === email && u.password === password);
+    if (user) {
+      setCurrentUser(user);
+      setLoginMessage("Успешный вход!");
+      navigate("/table");
+    } else {
+      setLoginMessage("Неправильный логин или пароль. Попробуйте еще раз.");
+    }
+  };
+
+  return (
+    <div>
+      <h2>Вход</h2>
+      <form onSubmit={handleLogin}>
         <TextField
-          label="Имя и Фамилия"
+          label="Email"
           variant="outlined"
-          value={employeeName}
-          onChange={(e) => setEmployeeName(e.target.value)}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
         <TextField
-          label="Должность"
+          label="Пароль"
           variant="outlined"
-          value={employeePosition}
-          onChange={(e) => setEmployeePosition(e.target.value)}
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <Button type="submit" variant="contained">{editEmployeeId ? "Сохранить" : "Добавить работника"}</Button>
+        <Button type="submit" variant="contained">
+          Войти
+        </Button>
       </form>
 
-      <div className="view-buttons">
-        <Button variant="outlined" onClick={() => setView('table')}>Таблица</Button>
-        <Button variant="outlined" onClick={() => setView('cards')}>Карточки</Button>
-      </div>
-
-      {view === 'table' ? renderTableView() : renderCardView()}
+      { }
+      {loginMessage && (
+        <div style={{ marginTop: "20px", color: loginMessage === "Успешный вход!" ? "green" : "red" }}>
+          {loginMessage}
+        </div>
+      )}
     </div>
   );
 };

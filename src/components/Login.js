@@ -1,23 +1,24 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { setCurrentUser } from "../redux/userSlice";
-import { userData } from "../data/userData";
 import { useNavigate } from "react-router-dom";
-import "../App.css";
 
-const Login = () => {
+const Login = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginMessage, setLoginMessage] = useState("");
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const user = userData.find((u) => u.email === email && u.password === password);
-    if (user) {
-      dispatch(setCurrentUser(user));
-      setLoginMessage("Успешный вход!");
+    const response = await fetch("http://localhost:5000/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      onLogin({ email, name: data.name, token: data.token });
+      localStorage.setItem("user", JSON.stringify(data));
       navigate("/table");
     } else {
       setLoginMessage("Неправильный логин или пароль.");
@@ -26,11 +27,11 @@ const Login = () => {
 
   return (
     <div>
-      <h2>Вход</h2>
+      <h2>Войти в систему</h2>
       <form onSubmit={handleLogin}>
         <input
           type="email"
-          placeholder="Электронная почта"
+          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -44,12 +45,7 @@ const Login = () => {
         />
         <button type="submit">Войти</button>
       </form>
-
-      {loginMessage && (
-        <div style={{ marginTop: "20px", color: loginMessage === "Успешный вход!" ? "green" : "red" }}>
-          {loginMessage}
-        </div>
-      )}
+      {loginMessage && <p>{loginMessage}</p>}
     </div>
   );
 };

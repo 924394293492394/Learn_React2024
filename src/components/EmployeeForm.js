@@ -1,59 +1,90 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { addEmployee, editEmployee, selectEditEmployeeId, selectEmployeeById, setEditEmployeeId } from "../redux/employeeSlice";
-import { useNavigate } from "react-router-dom";
-import "../App.css";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const EmployeeForm = () => {
-  const dispatch = useDispatch();
+  const [name, setName] = useState("");
+  const [position, setPosition] = useState("");
+  const [employeeId, setEmployeeId] = useState(null);
   const navigate = useNavigate();
-  const editEmployeeId = useSelector(selectEditEmployeeId);
-  const employeeToEdit = useSelector((state) => selectEmployeeById(state, editEmployeeId)) || { name: "", position: "" };
-
-  const [employeeName, setEmployeeName] = useState(employeeToEdit.name || "");
-  const [employeePosition, setEmployeePosition] = useState(employeeToEdit.position || "");
+  const location = useLocation();
 
   useEffect(() => {
-    if (editEmployeeId) {
-      setEmployeeName(employeeToEdit.name);
-      setEmployeePosition(employeeToEdit.position);
+    const queryParams = new URLSearchParams(location.search);
+    const id = queryParams.get("id");
+
+    if (id) {
+      setEmployeeId(id);
+      fetch(`http://localhost:5000/api/employees/${id}`)
+        .then((response) => response.json())
+        .then((data) => {
+          setName(data.name);
+          setPosition(data.position);
+        })
+        .catch((error) => console.error("Ошибка при получении сотрудника", error));
     }
-  }, [editEmployeeId, employeeToEdit]);
+  }, [location]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (editEmployeeId) {
-      dispatch(editEmployee({ id: editEmployeeId, name: employeeName, position: employeePosition }));
-      dispatch(setEditEmployeeId(null));
-    } else {
-      dispatch(addEmployee({ id: Date.now(), name: employeeName, position: employeePosition }));
-    }
 
-    setEmployeeName("");
-    setEmployeePosition("");
-    navigate("/table");
+    const employeeData = { name, position };
+
+    if (employeeId) {
+      fetch(`http://localhost:5000/api/employees/${employeeId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(employeeData),
+      })
+        .then((response) => response.json())
+        .then(() => {
+          navigate("/table");
+        })
+        .catch((error) => console.error("Ошибка при редактировании", error));
+    } else {
+      fetch("http://localhost:5000/api/employees", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(employeeData),
+      })
+        .then((response) => response.json())
+        .then(() => {
+          navigate("/table");
+        })
+        .catch((error) => console.error("Ошибка при добавлении", error));
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="text"
-        placeholder="Имя и Фамилия"
-        value={employeeName}
-        onChange={(e) => setEmployeeName(e.target.value)}
-        required
-      />
-      <input
-        type="text"
-        placeholder="Должность"
-        value={employeePosition}
-        onChange={(e) => setEmployeePosition(e.target.value)}
-        required
-      />
-      <button type="submit">
-        {editEmployeeId ? "Сохранить" : "Добавить работника"}
-      </button>
-    </form>
+    <div>
+      <h2>{employeeId ? "Редактировать сотрудника" : "Добавить сотрудника"}</h2>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Имя:</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label>Должность:</label>
+          <input
+            type="text"
+            value={position}
+            onChange={(e) => setPosition(e.target.value)}
+            required
+          />
+        </div>
+        <button type="submit">
+          {employeeId ? "Сохранить изменения" : "Добавить"}
+        </button>
+      </form>
+    </div>
   );
 };
 

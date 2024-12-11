@@ -1,21 +1,42 @@
-import React from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { deleteEmployee, selectEmployees, setEditEmployeeId } from "../redux/employeeSlice";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../App.css";
 
 const EmployeeTable = () => {
-  const employees = useSelector(selectEmployees);
-  const dispatch = useDispatch();
+  const [employees, setEmployees] = useState([]);
   const navigate = useNavigate();
 
-  const handleDeleteEmployee = (id) => {
-    dispatch(deleteEmployee(id));
+  useEffect(() => {
+    fetch("http://localhost:5000/api/employees")
+      .then((res) => res.json())
+      .then((data) => {
+        setEmployees(data);
+      })
+      .catch((error) => console.error("Ошибка при получении данных:", error));
+  }, []);
+
+  const handleDeleteEmployee = async (id) => {
+    const confirmDelete = window.confirm("Вы уверены, что хотите удалить этого сотрудника?");
+    if (!confirmDelete) return;
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/employees/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Ошибка при удалении сотрудника");
+      }
+
+      setEmployees((prevEmployees) =>
+        prevEmployees.filter((employee) => employee._id !== id)
+      );
+    } catch (error) {
+      console.error("Ошибка при удалении сотрудника:", error);
+    }
   };
 
   const handleEditEmployee = (id) => {
-    dispatch(setEditEmployeeId(id));
-    navigate("/edit");
+    navigate(`/edit?id=${id}`);
   };
 
   return (
@@ -25,20 +46,26 @@ const EmployeeTable = () => {
           <tr>
             <th>Имя и Фамилия</th>
             <th>Должность</th>
-            <th id="act2">Действия</th>
+            <th>Действия</th>
           </tr>
         </thead>
         <tbody>
-          {employees.map((employee) => (
-            <tr key={employee.id}>
-              <td>{employee.name}</td>
-              <td>{employee.position}</td>
-              <td className="action-buttons">
-                <button onClick={() => handleEditEmployee(employee.id)}>Редактировать</button>
-                <button onClick={() => handleDeleteEmployee(employee.id)}>Удалить</button>
-              </td>
+          {employees.length === 0 ? (
+            <tr>
+              <td colSpan="3">Нет сотрудников для отображения</td>
             </tr>
-          ))}
+          ) : (
+            employees.map((employee) => (
+              <tr key={employee._id}>
+                <td>{employee.name}</td>
+                <td>{employee.position}</td>
+                <td className="action-buttons">
+                  <button onClick={() => handleEditEmployee(employee._id)}>Редактировать</button>
+                  <button onClick={() => handleDeleteEmployee(employee._id)}>Удалить</button>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>

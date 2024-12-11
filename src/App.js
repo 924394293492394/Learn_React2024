@@ -1,27 +1,24 @@
-import React from "react";
+import React, { useState } from "react";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import EmployeeTable from "./components/EmployeeTable";
 import EmployeeCards from "./components/EmployeeCard";
 import EmployeeForm from "./components/EmployeeForm";
 import Login from "./components/Login";
-import { useSelector } from "react-redux";
-import { selectCurrentUser } from "./redux/userSlice";
 import "./App.css";
 
 const App = () => {
-  const currentUser = useSelector(selectCurrentUser);
+  const [currentUser, setCurrentUser] = useState(null);
 
   return (
     <Router>
       <div className="App">
         {!currentUser ? (
           <Routes>
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<Login onLogin={setCurrentUser} />} />
           </Routes>
         ) : (
           <div>
             <h1>Управление работниками</h1>
-
             <Routes>
               <Route path="/edit" element={<EmployeeForm />} />
               <Route path="/add" element={<EmployeeForm />} />
